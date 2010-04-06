@@ -22,7 +22,8 @@ import java.net._
 import java.util.Date
 import scala.collection.Map
 import scala.collection.immutable
-import scala.collection.jcl
+import scala.collection.mutable
+import scala.collection.JavaConversions._
 import com.twitter.json.Json
 import net.lag.configgy.{Configgy, RuntimeEnvironment}
 import net.lag.logging.Logger
@@ -90,7 +91,7 @@ class CommandHandler(runtime: RuntimeEnvironment) {
   }
 
   private def getThreadStacks(): Map[String, Map[String, Map[String, Any]]] = {
-    val stacks = jcl.Map(Thread.getAllStackTraces()).map { case (thread, stack) =>
+    val stacks = Thread.getAllStackTraces().map { case (thread, stack) =>
       (thread.getId().toString, immutable.Map("thread" -> thread.getName(),
                                               "daemon" -> thread.isDaemon(),
                                               "state" -> thread.getState(),
