@@ -20,20 +20,19 @@
   </publications>
 
   <dependencies>
-    <dependency org="org.scala-lang" name="scala-compiler" rev="2.7.7" />
-    <dependency org="org.scala-lang" name="scala-library" rev="2.7.7" />
-    <dependency org="org.scala-tools.testing" name="specs" rev="1.6.1" conf="test->*" />
-    <dependency org="org.scala-tools" name="vscaladoc" rev="1.1-md-3" conf="bootstrap->*" />
-    <dependency org="com.twitter" name="json" rev="1.1" />
+    <dependency org="org.scala-lang" name="scala-compiler" rev="2.8.0.Beta1" />
+    <dependency org="org.scala-lang" name="scala-library" rev="2.8.0.Beta1" />
+    <dependency org="org.scala-tools.testing" name="specs" rev="1.6.1-2.8.0.Beta1-RC1" conf="test->*" />
+    <dependency org="com.twitter" name="json" rev="1.1-2.8.0.Beta1" />
 
-    <dependency org="net.lag" name="configgy" rev="1.5.2" />
+    <dependency org="net.lag" name="configgy" rev="2.8.0.Beta1-1.5-SNAPSHOT" />
     <dependency org="commons-logging" name="commons-logging" rev="1.1" />
     <dependency org="commons-lang" name="commons-lang" rev="2.2" />
     <dependency org="org.hamcrest" name="hamcrest-all" rev="1.1" conf="test->*" /> <!--auto-->
     <dependency org="cglib" name="cglib" rev="2.1_3" conf="test->*" /> <!--auto-->
     <dependency org="asm" name="asm" rev="1.5.3" conf="test->*" /> <!--auto-->
     <dependency org="org.objenesis" name="objenesis" rev="1.1" conf="test->*" /> <!--auto-->
-    <dependency org="com.twitter" name="xrayspecs" rev="1.0.7" /> <!--auto-->
+    <dependency org="com.twitter" name="xrayspecs" rev="1.0.6-2.8.0.Beta1" /> <!--auto-->
     <dependency org="org.mockito" name="mockito-all" rev="1.8.1" />
     <dependency org="org.jboss.netty" name="netty" rev="3.1.5.GA" />
   </dependencies>
