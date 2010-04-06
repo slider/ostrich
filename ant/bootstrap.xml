@@ -66,6 +66,5 @@
   <import file="prepare.xml" />
   <import file="compile.xml" />
   <import file="test.xml" />
-  <import file="docs.xml" />
   <import file="package.xml" />
 </project>
