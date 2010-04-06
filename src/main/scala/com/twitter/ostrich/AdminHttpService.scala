@@ -53,7 +53,7 @@ class MissingFileHandler extends CustomHttpHandler {
 
 class ReportRequestHandler extends CustomHttpHandler {
   lazy val pageFilePath: java.net.URI = this.getClass.getResource("/report_request_handler.html").toURI
-  lazy val page: String = Source.fromFile(pageFilePath).mkString
+  lazy val page: String = Source.fromURI(pageFilePath).mkString
 
   def handle(exchange: HttpExchange) {
     render(page, exchange)
