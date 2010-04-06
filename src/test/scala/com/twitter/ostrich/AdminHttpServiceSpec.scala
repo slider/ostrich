@@ -33,7 +33,7 @@ object AdminHttpServiceSpec extends Specification with Eventually with Mockito {
 
   def get(path: String): String = {
     val url = new URL("http://localhost:%s%s".format(PORT, path))
-    Source.fromURL(url).getLines.mkString("\n")
+    Source.fromURL(url).getLines().mkString("\n")
   }
 
   "AdminHttpService" should {
