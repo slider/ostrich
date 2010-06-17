@@ -11,6 +11,15 @@ This library is released under the Apache Software License, version 2, which sho
 the source in a file named `LICENSE`.
 
 
+## Building
+
+Use sbt (simple-build-tool) to build:
+
+    $ sbt clean update package-dist
+
+The finished jar will be in `dist/`.
+
+
 ## Web/socket commands
 
 Commands over the web interface take the form of a "get" request:
@@ -65,6 +74,10 @@ The commands are:
 - server_info
 
   dump server info (server name, version, build, and git revision)
+
+- threads
+
+  dump stack traces and stats about each currently running thread
 
 
 ## Admin API

@@ -30,14 +30,23 @@ abstract class CustomHttpHandler extends HttpHandler {
   }
 
   def render(body: String, exchange: HttpExchange, code: Int) {
+    render(body, exchange, code, "text/html")
+  }
+
+  def render(body: String, exchange: HttpExchange, code: Int, contentType: String) {
     val input: InputStream = exchange.getRequestBody()
     val output: OutputStream = exchange.getResponseBody()
-    exchange.getResponseHeaders.set("Content-Type", "text/html")
-    exchange.sendResponseHeaders(code, body.length)
-    output.write(body.getBytes)
+    exchange.getResponseHeaders.set("Content-Type", contentType)
+    val data = body.getBytes
+    exchange.sendResponseHeaders(code, data.size)
+    output.write(data)
     output.flush()
     output.close()
     exchange.close()
+  }
+
+  def loadResource(name: String) = {
+    Source.fromInputStream(getClass.getResourceAsStream(name)).mkString
   }
 
   def handle(exchange: HttpExchange): Unit
@@ -52,8 +61,7 @@ class MissingFileHandler extends CustomHttpHandler {
 
 
 class ReportRequestHandler extends CustomHttpHandler {
-  lazy val pageFilePath: java.net.URI = this.getClass.getResource("/report_request_handler.html").toURI
-  lazy val page: String = Source.fromURI(pageFilePath).mkString
+  lazy val page = loadResource(path)
 
   def handle(exchange: HttpExchange) {
     render(page, exchange)
@@ -61,40 +69,46 @@ class ReportRequestHandler extends CustomHttpHandler {
 }
 
 
-class CommandRequestHandler(commandHandler: CommandHandler) extends CustomHttpHandler {
+abstract class CgiRequestHandler extends CustomHttpHandler {
   def handle(exchange: HttpExchange) {
     try {
-      _handle(exchange)
+      val requestURI = exchange.getRequestURI
+      val path = requestURI.getPath.split('/').toList.filter { _.length > 0 }
+
+      val parameters: List[List[String]] = {
+        val params = requestURI.getQuery
+
+        if (params != null) {
+          params.split('&').toList
+        } else {
+          Nil
+        }
+      }.map { _.split("=", 2).toList }
+
+      handle(exchange, path, parameters)
     } catch {
       case e => render("exception while processing request: " + e, exchange, 500)
     }
   }
 
-  def _handle(exchange: HttpExchange) {
-    var response: String = null
-    val requestURI = exchange.getRequestURI
-    val command = requestURI.getPath.split('/').last.split('.').first
+  def handle(exchange: HttpExchange, path: List[String], parameters: List[List[String]])
+}
 
-    val format: Format  = requestURI.getPath.split('.').last match {
+
+class CommandRequestHandler(commandHandler: CommandHandler) extends CgiRequestHandler {
+  def handle(exchange: HttpExchange, path: List[String], parameters: List[List[String]]) {
+    val command = path.last.split('.').first
+    val format: Format = path.last.split('.').last match {
       case "txt" => Format.PlainText
       case _ => Format.Json
     }
 
-    val parameters: List[String] = {
-      val params = requestURI.getQuery
-
-      if (params != null) {
-        params.split('&').toList
-      } else {
-        Nil
-      }
-    }.map { _.split('=').first }
-
     try {
-      response = {
-        val commandResponse = commandHandler(command, parameters, format)
+      val response = {
+        val parameterNames = parameters.map { p => p(0) }
+        val commandResponse = commandHandler(command, parameterNames, format)
 
-        if (parameters.contains("callback") && (format == Format.Json)) {
+        if (parameterNames.contains("callback") && (format == Format.Json)) {
           "ostrichCallback(%s)".format(commandResponse)
         } else {
           commandResponse
@@ -115,16 +129,27 @@ class CommandRequestHandler(commandHandler: CommandHandler) extends CustomHttpHa
 class AdminHttpService(config: ConfigMap, runtime: RuntimeEnvironment) extends Service {
   val port = config.getInt("admin_http_port")
   val backlog = config.getInt("admin_http_backlog", 20)
-  val httpServer: HttpServer = HttpServer.create(new InetSocketAddress(port.get), backlog)
+  val httpServer: HttpServer = HttpServer.create(new InetSocketAddress(port.getOrElse(0)), backlog)
   val commandHandler = new CommandHandler(runtime)
 
+  def address = httpServer.getAddress
+
   addContext("/", new CommandRequestHandler(commandHandler))
-  addContext("/report/", new ReportRequestHandler())
+  addContext("/report/", new PageResourceHandler("/report_request_handler.html"))
   addContext("/favicon.ico", new MissingFileHandler())
 
   httpServer.setExecutor(null)
 
   def addContext(path: String, handler: HttpHandler) = httpServer.createContext(path, handler)
+
+  def addContext(path: String)(generator: () => String) = {
+    val handler = new CustomHttpHandler {
+      def handle(exchange: HttpExchange) {
+        render(generator(), exchange)
+      }
+    }
+    httpServer.createContext(path, handler)
+  }
 
   def handleRequest(socket: Socket) { }
 
